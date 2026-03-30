@@ -1,3 +1,4 @@
+import 'package:clothes_store_app/services/api_service.dart';
 import 'package:clothes_store_app/style/custom_text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -27,6 +28,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool _isvisable = true;
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  Future<void> _register() async {
+    final success = await Apiservice.register(
+      _name.text.trim(),
+      _email.text.trim(),
+      _password.text.trim(),
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registered successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pushNamed(context, "/login");
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registered failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   spacing: 15.h,
                   children: [
                     TextFormField(
+                      controller: _name,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Username is required";
@@ -85,6 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     TextFormField(
+                      controller: _email,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Email is required";
@@ -122,6 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     TextFormField(
+                      controller: _password,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Password is required";
@@ -205,6 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       onPressed: () {
                         _key.currentState?.validate();
+                        _register();
                       },
                       child: Text(
                         "Register",

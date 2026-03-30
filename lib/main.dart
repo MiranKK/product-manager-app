@@ -1,3 +1,4 @@
+import 'package:clothes_store_app/screens/home_screen.dart';
 import 'package:clothes_store_app/screens/login_screen.dart';
 import 'package:clothes_store_app/screens/onboarding_screen.dart';
 import 'package:clothes_store_app/screens/register_screen.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         "/onboard": (context) => OnboardingScreen(),
         "/register": (context) => RegisterScreen(),
         "/login": (context) => LoginScreen(),
+        "/home": (context) => HomeScreen(),
       },
     ));
   }
