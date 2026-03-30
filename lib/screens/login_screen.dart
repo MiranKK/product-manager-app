@@ -1,7 +1,9 @@
+import 'package:clothes_store_app/provider/auth_provider.dart';
 import 'package:clothes_store_app/services/api_service.dart';
 import 'package:clothes_store_app/style/custom_text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,26 +34,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final _password = TextEditingController();
 
   Future<void> _login() async {
-    final token = await Apiservice.login(
-      _email.text.trim(),
-      _password.text.trim(),
-    );
-    if (token != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login successfully!'),
-          backgroundColor: Colors.green,
-        ),
+    if (_key.currentState!.validate()) {
+      final authprovider = Provider.of<AuthProvider>(context, listen: false);
+      final token = await authprovider.login(
+        _email.text.trim(),
+        _password.text.trim(),
       );
-      Navigator.pushNamed(context, "/home");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login failed'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (token) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        _email.clear();
+        _password.clear();
+        Navigator.pushNamed(context, "/home");
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authprovider.errorMessage ?? "Login failed"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
   }
 
   @override
@@ -182,22 +197,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(280.w, 52.h),
-                        backgroundColor: const Color(0xff9775FA),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                    Consumer<AuthProvider>(
+                      builder: (context, authprovider, child) => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(280.w, 52.h),
+                          backgroundColor: const Color(0xff9775FA),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
                         ),
-                      ),
-                      onPressed: () {
-                        _key.currentState?.validate();
-                        _login();
-                      },
-                      child: Text(
-                        "Login",
-                        style: CustomTextStyle().xxsmallWhiteBoldText,
+                        onPressed: authprovider.isloading ? null : _login,
+                        child: authprovider.isloading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : Text(
+                                "Login",
+                                style: CustomTextStyle().xxsmallWhiteBoldText,
+                              ),
                       ),
                     ),
                   ],

@@ -1,7 +1,9 @@
+import 'package:clothes_store_app/provider/auth_provider.dart';
 import 'package:clothes_store_app/services/api_service.dart';
 import 'package:clothes_store_app/style/custom_text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -33,27 +35,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
 
   Future<void> _register() async {
-    final success = await Apiservice.register(
-      _name.text.trim(),
-      _email.text.trim(),
-      _password.text.trim(),
-    );
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registered successfully!'),
-          backgroundColor: Colors.green,
-        ),
+    if (_key.currentState!.validate()) {
+      final authprovider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authprovider.register(
+        _name.text.trim(),
+        _email.text.trim(),
+        _password.text.trim(),
       );
-      Navigator.pushNamed(context, "/login");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registered failed'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registered successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _name.clear();
+        _email.clear();
+        _password.clear();
+        Navigator.pushNamed(context, "/login");
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authprovider.errorMessage ?? "Register failed"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
   }
 
   @override
@@ -225,22 +241,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ],
                     ),
-
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(280.w, 52.h),
-                        backgroundColor: const Color(0xff9775FA),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                    Consumer<AuthProvider>(
+                      builder: (context, authprovider, child) => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(280.w, 52.h),
+                          backgroundColor: const Color(0xff9775FA),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
                         ),
-                      ),
-                      onPressed: () {
-                        _key.currentState?.validate();
-                        _register();
-                      },
-                      child: Text(
-                        "Register",
-                        style: CustomTextStyle().xxsmallWhiteBoldText,
+                        onPressed: authprovider.isloading ? null : _register,
+                        child: authprovider.isloading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "Register",
+                                style: CustomTextStyle().xxsmallWhiteBoldText,
+                              ),
                       ),
                     ),
                   ],
